@@ -19,18 +19,18 @@ from rest_framework import status
 class AddToCartView(APIView):
     def post(self, request, user_id, product_id):
         try:
-            # Retrieve the user (replace CustomUser with your user model)
+            # Retrieve the user (replace User with your user model)
             user = get_object_or_404(User, id=user_id)
 
             # Retrieve the product
             product = get_object_or_404(Product, id=product_id)
 
-            # Check if the product is already in the user's cart
-            cart_item, created = CartItem.objects.get_or_create(cart=user.cart, product=product)
+            # Try to get the cart item for this product in the user's cart
+            cart_item = CartItem.objects.filter(cart=user.cart, product=product).first()
 
-            # If the product is already in the cart, update the quantity; otherwise, create a new cart item
-            if not created:
-                cart_item.quantity += 1  # Increase the quantity (you can adjust this as needed)
+            if cart_item:
+                # If the product is already in the cart, update the quantity
+                cart_item.quantity += 1
                 cart_item.save()
             else:
                 # If the product is not in the cart, create a new cart item with quantity 1
