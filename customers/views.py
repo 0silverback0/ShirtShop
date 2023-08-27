@@ -56,3 +56,48 @@ class UserCartView(APIView):
         serializer = CartItemSerializer(cart_items, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    # ORDERS
+
+    from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import Cart, CartItem, Order, OrderItem
+from .serializers import OrderSerializer
+
+class CartToOrderView(APIView):
+    def post(self, request, user_id):
+        try:
+            # Retrieve the user's cart
+            cart = Cart.objects.get(user_id=user_id)
+
+            # Create a new order for the user
+            order = Order.objects.create(user=cart.user)
+
+            # Initialize total price to 0
+            total_price = 0
+
+            # Loop through cart items and create order items
+            for cart_item in CartItem.objects.filter(cart=cart):
+                order_item = OrderItem.objects.create(
+                    order=order,
+                    product=cart_item.product,
+                    quantity=cart_item.quantity
+                )
+
+                # Add the subtotal of this order item to the total price
+                total_price += order_item.subtotal()
+
+                # Optionally, you can remove the cart item after adding it to the order
+                cart_item.delete()
+
+            # Set the calculated total price for the order
+            order.total_price = total_price  # Set the total price here
+            order.save()
+
+            # You can serialize and return the order if needed
+            serializer = OrderSerializer(order)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Cart.DoesNotExist:
+            return Response({"message": "Cart not found"}, status=status.HTTP_404_NOT_FOUND)
