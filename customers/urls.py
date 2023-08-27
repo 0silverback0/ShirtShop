@@ -8,4 +8,6 @@ urlpatterns = [
     path('items/<int:pk>', views.SingleProductView.as_view(), name='single-item'),
     path('items/<int:product_id>/user/<int:user_id>/add-to-cart', views.AddToCartView.as_view(), name='add-to-cart'),
     path('users/<int:user_id>/cart/', views.UserCartView.as_view(), name='user-cart'),
+    path('place-order/<int:user_id>/', views.CartToOrderView.as_view(), name='place-order'),
+
 ]
