@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from products.models import Product
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -41,3 +41,11 @@ def create_cart_for_user(sender, instance, created, **kwargs):
         Cart.objects.create(user=instance)
 
 post_save.connect(create_cart_for_user, sender=User)
+
+@receiver(post_save, sender=User)
+def add_user_to_group(sender, instance, created, **kwargs):
+    # Check if the user was just created
+    if created:
+        # Add the user to the 'Customer' group
+        customer_group, created = Group.objects.get_or_create(name='customers')
+        instance.groups.add(customer_group)
