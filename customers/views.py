@@ -92,16 +92,12 @@ class SubtractCartItemQuantityView(UpdateAPIView):
 class CartToOrderView(APIView):
     def post(self, request, user_id):
         try:
-            # Retrieve the user's cart
             cart = Cart.objects.get(user_id=user_id)
 
-            # Create a new order for the user
             order = Order.objects.create(user=cart.user)
 
-            # Initialize total price to 0
-            total_price = 0
-
             # Loop through cart items and create order items
+            total_price = 0
             for cart_item in CartItem.objects.filter(cart=cart):
                 order_item = OrderItem.objects.create(
                     order=order,
@@ -112,14 +108,13 @@ class CartToOrderView(APIView):
                 # Add the subtotal of this order item to the total price
                 total_price += order_item.subtotal()
 
-                # Optionally, you can remove the cart item after adding it to the order
+                # remove the cart item after adding it to the order
                 cart_item.delete()
 
             # Set the calculated total price for the order
-            order.total_price = total_price  # Set the total price here
+            order.total_price = total_price  
             order.save()
 
-            # You can serialize and return the order if needed
             serializer = OrderSerializer(order)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 

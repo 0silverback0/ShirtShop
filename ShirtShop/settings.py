@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'products',
     'customers',
+    'managers',
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
@@ -81,7 +82,7 @@ WSGI_APPLICATION = 'ShirtShop.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {   
-    'default': {   
+    'default': {  
         'ENGINE': 'django.db.backends.mysql',   
         'NAME': 'shirtshop',   
         'USER': 'root',   
@@ -91,7 +92,16 @@ DATABASES = {
         'OPTIONS': {   
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"   
         }   
-    }   
+    },
+     'test': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'shirtshop_test',
+        'USER': 'root',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    },
+    
 }
 
 
