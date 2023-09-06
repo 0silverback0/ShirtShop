@@ -43,10 +43,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'corsheaders',
     'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -157,3 +159,10 @@ REST_FRAMEWORK = {
 DJOSER = {
     "USER_ID_FIELD": "username"
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # Add the URL of your React development server
+    # Add other allowed origins as needed
+]
+
+# CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
