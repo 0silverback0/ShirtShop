@@ -83,6 +83,11 @@ WSGI_APPLICATION = 'ShirtShop.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 DATABASES = {   
     'default': {  
         'ENGINE': 'django.db.backends.mysql',   
@@ -107,7 +112,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'marz$default',
         'USER': 'marz',
-        'PASSWORD': 'Darius63013',
+        'PASSWORD': os.environ.get('DB_PASSWORD'),
         'HOST': 'marz.mysql.pythonanywhere-services.com',
         'OPTIONS': {
             # Any additional database options go here
