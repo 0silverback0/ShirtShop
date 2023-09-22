@@ -10,14 +10,15 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import CustomAuthTokenSerializer
-
-# Create your views here.
-
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
+from .serializers import OrderItemSerializer
+
+# Create your views here.
 
 class UserRegistrationView(APIView):
     def post(self, request):
@@ -36,7 +37,7 @@ class UserRegistrationView(APIView):
                 'message': 'User registered successfully.',
                 'user_id': user.id,
                 'username': user.username,
-                'token': token.key  # Include the token in the response
+                'token': token.key  
             }
 
             return Response(response_data, status=status.HTTP_201_CREATED)
@@ -66,12 +67,8 @@ class CustomTokenObtainView(ObtainAuthToken):
 class AddToCartView(APIView):
     def post(self, request, user_id, product_id):
         try:
-            # Retrieve the user (replace User with your user model)
             user = get_object_or_404(User, id=user_id)
-
-            # Retrieve the product
             product = get_object_or_404(Product, id=product_id)
-
             # Try to get the cart item for this product in the user's cart
             cart_item = CartItem.objects.filter(cart=user.cart, product=product).first()
 
@@ -92,20 +89,15 @@ class AddToCartView(APIView):
 
 class UserCartView(APIView):
     def get(self, request, user_id):
-        # Retrieve the user's cart
         user = get_object_or_404(User, id=user_id)
         cart_items = CartItem.objects.filter(cart=user.cart)
-        
-        # Serialize the cart items
         serializer = CartItemSerializer(cart_items, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     
 class DeleteCartItemView(DestroyAPIView):
-    queryset = CartItem.objects.all()  # Define your queryset here
-    # serializer_class = CartItemSerializer  # Optional: Use a serializer for validation
-
+    queryset = CartItem.objects.all()  
     def delete(self, request, *args, **kwargs):
         cart_item_id = kwargs.get('cart_item_id')
         try:
@@ -128,21 +120,17 @@ class SubtractCartItemQuantityView(UpdateAPIView):
                 cart_item.save()
                 return Response({"message": "Quantity subtracted successfully"}, status=status.HTTP_200_OK)
             else:
-                # If the quantity is already 1, you might want to delete the cart item instead.
+                # If the quantity is already 1 delete the cart item
                 cart_item.delete()
                 return Response({"message": "Cart item deleted because quantity is 1"}, status=status.HTTP_204_NO_CONTENT)
         except CartItem.DoesNotExist:
             return Response({"message": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
     
-# ORDERS
-
 class CartToOrderView(APIView):
     def post(self, request, user_id):
         try:
             cart = Cart.objects.get(user_id=user_id)
-
             order = Order.objects.create(user=cart.user)
-
             # Loop through cart items and create order items
             total_price = 0
             for cart_item in CartItem.objects.filter(cart=cart):
@@ -158,7 +146,6 @@ class CartToOrderView(APIView):
                 # remove the cart item after adding it to the order
                 cart_item.delete()
 
-            # Set the calculated total price for the order
             order.total_price = total_price  
             order.save()
 
@@ -168,12 +155,9 @@ class CartToOrderView(APIView):
         except Cart.DoesNotExist:
             return Response({"message": "Cart not found"}, status=status.HTTP_404_NOT_FOUND)
 
-from rest_framework.generics import ListAPIView
-from .serializers import OrderItemSerializer
-
 class OrderItemListView(ListAPIView):
     serializer_class = OrderItemSerializer
 
     def get_queryset(self):
-        order_id = self.kwargs.get('order_id')  # Extract order_id from URL
+        order_id = self.kwargs.get('order_id')
         return OrderItem.objects.filter(order_id=order_id)
