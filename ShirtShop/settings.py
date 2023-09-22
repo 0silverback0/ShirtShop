@@ -89,25 +89,25 @@ from dotenv import load_dotenv
 load_dotenv()
 
 DATABASES = {   
-    'default': {  
-        'ENGINE': 'django.db.backends.mysql',   
-        'NAME': 'shirtshop',   
-        'USER': 'root',   
-        'PASSWORD': 'password',   
-        'HOST': '127.0.0.1',   
-        'PORT': '3306',   
-        'OPTIONS': {   
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"   
-        }   
-    },
-     'test': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'shirtshop_test',
-        'USER': 'root',
-        'PASSWORD': 'password',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    },
+    # 'default': {  
+    #     'ENGINE': 'django.db.backends.mysql',   
+    #     'NAME': 'shirtshop',   
+    #     'USER': 'root',   
+    #     'PASSWORD': 'password',   
+    #     'HOST': '127.0.0.1',   
+    #     'PORT': '3306',   
+    #     'OPTIONS': {   
+    #         'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"   
+    #     }   
+    # },
+    #  'test': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME': 'shirtshop_test',
+    #     'USER': 'root',
+    #     'PASSWORD': 'password',
+    #     'HOST': 'localhost',
+    #     'PORT': '3306',
+    # },
     'pythonanywhere': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'marz$default',
