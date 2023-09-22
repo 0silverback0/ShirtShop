@@ -44,8 +44,6 @@ post_save.connect(create_cart_for_user, sender=User)
 
 @receiver(post_save, sender=User)
 def add_user_to_group(sender, instance, created, **kwargs):
-    # Check if the user was just created
     if created:
-        # Add the user to the 'Customer' group
         customer_group, created = Group.objects.get_or_create(name='customers')
         instance.groups.add(customer_group)

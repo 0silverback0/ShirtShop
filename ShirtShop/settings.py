@@ -39,16 +39,19 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'products',
     'customers',
+    'managers',
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
     'debug_toolbar',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -81,7 +84,7 @@ WSGI_APPLICATION = 'ShirtShop.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {   
-    'default': {   
+    'default': {  
         'ENGINE': 'django.db.backends.mysql',   
         'NAME': 'shirtshop',   
         'USER': 'root',   
@@ -91,7 +94,16 @@ DATABASES = {
         'OPTIONS': {   
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"   
         }   
-    }   
+    },
+     'test': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'shirtshop_test',
+        'USER': 'root',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    },
+    
 }
 
 
@@ -147,3 +159,25 @@ REST_FRAMEWORK = {
 DJOSER = {
     "USER_ID_FIELD": "username"
 }
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+]
+
+CORS_ALLOW_HEADERS = [
+    'Authorization',
+    'Content-Type',
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+
+
+

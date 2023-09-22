@@ -1,31 +1,74 @@
-from django.shortcuts import render
-from rest_framework import generics
 from .models import Product, CartItem, Order, OrderItem, Cart
-from products.serializers import ProductSerializer
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.generics import DestroyAPIView, UpdateAPIView
 from rest_framework import status
-from rest_framework.response import Response
 from .serializers import CartItemSerializer, OrderSerializer
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import CustomAuthTokenSerializer
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import get_user_model
+from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
+from .serializers import OrderItemSerializer
 
 # Create your views here.
 
-class SingleProductView(generics.ListCreateAPIView):
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
+class UserRegistrationView(APIView):
+    def post(self, request):
+        User = get_user_model()
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        if not username or not password:
+            return Response({'error': 'Both username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.create_user(username=username, password=password)
+            token, created = Token.objects.get_or_create(user=user)
+
+            response_data = {
+                'message': 'User registered successfully.',
+                'user_id': user.id,
+                'username': user.username,
+                'token': token.key  
+            }
+
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class CustomTokenObtainView(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+
+        if response.status_code == status.HTTP_200_OK:
+            token = Token.objects.get(key=response.data['token'])
+            user = token.user
+
+            # Create a custom response using the custom serializer
+            serializer = CustomAuthTokenSerializer(data={
+                'token': token.key,
+                'user_id': user.id,
+                'username': user.username,
+            })
+
+            if serializer.is_valid():
+                return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+        return response
 
 class AddToCartView(APIView):
     def post(self, request, user_id, product_id):
         try:
-            # Retrieve the user (replace User with your user model)
             user = get_object_or_404(User, id=user_id)
-
-            # Retrieve the product
             product = get_object_or_404(Product, id=product_id)
-
             # Try to get the cart item for this product in the user's cart
             cart_item = CartItem.objects.filter(cart=user.cart, product=product).first()
 
@@ -46,19 +89,15 @@ class AddToCartView(APIView):
 
 class UserCartView(APIView):
     def get(self, request, user_id):
-        # Retrieve the user's cart
         user = get_object_or_404(User, id=user_id)
         cart_items = CartItem.objects.filter(cart=user.cart)
-        
-        # Serialize the cart items
         serializer = CartItemSerializer(cart_items, many=True)
         
         return Response(serializer.data, status=status.HTTP_200_OK)
+
     
 class DeleteCartItemView(DestroyAPIView):
-    queryset = CartItem.objects.all()  # Define your queryset here
-    # serializer_class = CartItemSerializer  # Optional: Use a serializer for validation
-
+    queryset = CartItem.objects.all()  
     def delete(self, request, *args, **kwargs):
         cart_item_id = kwargs.get('cart_item_id')
         try:
@@ -70,7 +109,7 @@ class DeleteCartItemView(DestroyAPIView):
         
 class SubtractCartItemQuantityView(UpdateAPIView):
     queryset = CartItem.objects.all()
-    serializer_class = CartItemSerializer  # Use a serializer for updating cart item
+    serializer_class = CartItemSerializer  
 
     def update(self, request, *args, **kwargs):
         cart_item_id = kwargs.get('cart_item_id')
@@ -81,27 +120,19 @@ class SubtractCartItemQuantityView(UpdateAPIView):
                 cart_item.save()
                 return Response({"message": "Quantity subtracted successfully"}, status=status.HTTP_200_OK)
             else:
-                # If the quantity is already 1, you might want to delete the cart item instead.
+                # If the quantity is already 1 delete the cart item
                 cart_item.delete()
                 return Response({"message": "Cart item deleted because quantity is 1"}, status=status.HTTP_204_NO_CONTENT)
         except CartItem.DoesNotExist:
             return Response({"message": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
     
-# ORDERS
-
 class CartToOrderView(APIView):
     def post(self, request, user_id):
         try:
-            # Retrieve the user's cart
             cart = Cart.objects.get(user_id=user_id)
-
-            # Create a new order for the user
             order = Order.objects.create(user=cart.user)
-
-            # Initialize total price to 0
-            total_price = 0
-
             # Loop through cart items and create order items
+            total_price = 0
             for cart_item in CartItem.objects.filter(cart=cart):
                 order_item = OrderItem.objects.create(
                     order=order,
@@ -112,16 +143,21 @@ class CartToOrderView(APIView):
                 # Add the subtotal of this order item to the total price
                 total_price += order_item.subtotal()
 
-                # Optionally, you can remove the cart item after adding it to the order
+                # remove the cart item after adding it to the order
                 cart_item.delete()
 
-            # Set the calculated total price for the order
-            order.total_price = total_price  # Set the total price here
+            order.total_price = total_price  
             order.save()
 
-            # You can serialize and return the order if needed
             serializer = OrderSerializer(order)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Cart.DoesNotExist:
             return Response({"message": "Cart not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class OrderItemListView(ListAPIView):
+    serializer_class = OrderItemSerializer
+
+    def get_queryset(self):
+        order_id = self.kwargs.get('order_id')
+        return OrderItem.objects.filter(order_id=order_id)
