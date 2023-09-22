@@ -103,12 +103,18 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '3306',
     },
-    
+    'pythonanywhere': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'marz$default',
+        'USER': 'marz',
+        'PASSWORD': 'Darius63013',
+        'HOST': 'marz.mysql.pythonanywhere-services.com',
+        'OPTIONS': {
+            # Any additional database options go here
+        },
+    },
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
